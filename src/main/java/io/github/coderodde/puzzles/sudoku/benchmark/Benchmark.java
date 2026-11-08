@@ -19,8 +19,8 @@ import io.github.coderodde.statistics.run.SignificanceLevel;
 public final class Benchmark {
     
     private static final int WARMUP_ITERATIONS = 1_000;
-    private static final int MAJOR_ITERATIONS  = 500;
-    private static final int MINOR_ITERATIONS  = 2_000;
+    private static final int MAJOR_ITERATIONS  = 20;
+    private static final int MINOR_ITERATIONS  = 500;
     private static final double SIGNIFICANCE_LEVEL_VALUE = 0.05;
     private static final SignificanceLevel SIGNIFICANCE_LEVEL = 
                      new SignificanceLevel(SIGNIFICANCE_LEVEL_VALUE);
