@@ -18,6 +18,12 @@
             <artifactId>ExactCoverSolvers.java</artifactId>
             <version>1.0.0</version>
         </dependency>
+        
+        <dependency>
+            <groupId>io.github.coderodde.statistics.run</groupId>
+            <artifactId>RunStatistics.java</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
     
     <properties>
