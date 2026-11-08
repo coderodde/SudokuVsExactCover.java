@@ -11,15 +11,15 @@ import io.github.coderodde.puzzles.sudoku.SudokuSolver;
 import io.github.coderodde.statistics.run.RunStatistics;
 import io.github.coderodde.statistics.run.Runner;
 import io.github.coderodde.statistics.run.SignificanceLevel;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * 
+ * This class runs a benchmark between dedicated sudoku solver and the Algorithm
+ * X by Donald Knuth.
  */
 public final class Benchmark {
     
-    private static final int ITERATIONS = 100;
+    private static final int WARMUP_ITERATIONS = 1_000;
+    private static final int ITERATIONS        = 10_000;
     private static final double SIGNIFICANCE_LEVEL_VALUE = 0.05;
     private static final SignificanceLevel SIGNIFICANCE_LEVEL = 
                      new SignificanceLevel(SIGNIFICANCE_LEVEL_VALUE);
@@ -41,10 +41,10 @@ public final class Benchmark {
     
     private static class AbstractRunnable implements Runnable {
         
-        protected final List<Sudoku> results = new ArrayList<>();
+        protected Sudoku result;
         
-        public List<Sudoku> getResults() {
-            return results;
+        public Sudoku getResult() {
+            return result;
         }
 
         @Override
@@ -59,7 +59,7 @@ public final class Benchmark {
         
         @Override
         public void run() {
-            results.add(solver.solve(ARTO_INKALA_SUDOKU));
+            result = solver.solve(ARTO_INKALA_SUDOKU);
         }
     }
     
@@ -68,17 +68,16 @@ public final class Benchmark {
         private final ExactCoverSolver solver = 
             new AlgorithmXExactCoverSolver();
         
-        private final ExactCoverInstance instance = 
-            new SudokuExactCoverEncoder().encode(ARTO_INKALA_SUDOKU);
-        
         private final SudokuExactCoverDecoder decoder = 
             new SudokuExactCoverDecoder();
         
         @Override
         public void run() {
+            ExactCoverInstance instance = new SudokuExactCoverEncoder()
+                                            .encode(ARTO_INKALA_SUDOKU);
+            
             ExactCoverSolution solution = solver.solve(instance);
-            Sudoku sudoku = decoder.decode(solution);
-            results.add(sudoku);
+            result = decoder.decode(solution);
         }
     }
     
@@ -87,6 +86,10 @@ public final class Benchmark {
     public static void main(String[] args) {
         AbstractRunnable sudokuRunnable     = new SudokuRunnable();
         AbstractRunnable exactCoverRunnable = new ExactCoverRunnable();
+        
+        // Warmup:
+        Runner.measure(sudokuRunnable, WARMUP_ITERATIONS, SIGNIFICANCE_LEVEL);
+        Runner.measure(sudokuRunnable, WARMUP_ITERATIONS, SIGNIFICANCE_LEVEL);
         
         RunStatistics sudokuRunStatistics = 
             Runner.measure(sudokuRunnable, 
@@ -110,7 +113,7 @@ public final class Benchmark {
         
         System.out.printf(
             "> Algorithms agree: %b.%n", 
-            sudokuRunnable.getResults()
-                          .equals(exactCoverRunnable.getResults()));    
+            sudokuRunnable.getResult()
+                          .equals(exactCoverRunnable.getResult()));    
     }
 }
