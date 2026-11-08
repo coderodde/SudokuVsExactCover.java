@@ -3,7 +3,7 @@ package io.github.coderodde.puzzles.sudoku.benchmark;
 import io.github.coderodde.combinatorics.exactcover.AlgorithmXExactCoverSolver;
 import io.github.coderodde.combinatorics.exactcover.ExactCoverInstance;
 import io.github.coderodde.combinatorics.exactcover.ExactCoverSolution;
-import io.github.coderodde.combinatorics.exactcover.converters.ExactCoverInstanceToSudokuConverter;
+import io.github.coderodde.combinatorics.exactcover.converters.ExactCoverSolutionToSudokuConverter;
 import io.github.coderodde.combinatorics.exactcover.converters.Sudoku;
 import io.github.coderodde.combinatorics.exactcover.converters.SudokuToExactCoverInstanceConverter;
 import io.github.coderodde.puzzles.sudoku.SudokuSolver;
@@ -44,20 +44,26 @@ public final class Benchmark {
                 elapsed,
                 isValidSolvedSudoku(solved));
 
-            ExactCoverInstance instance =
-                new SudokuToExactCoverInstanceConverter()
-                    .convert(sudoku);
-
+            var encoder = new SudokuToExactCoverInstanceConverter();
+            var decoder = new ExactCoverSolutionToSudokuConverter();
+            
             t = System.nanoTime();
 
-            ExactCoverSolution exactCoverSolution =
-                exactCoverSolver.solve(instance);
+            ExactCoverInstance instance = encoder.convert(sudoku);
+            ExactCoverSolution solution = exactCoverSolver.solve(instance);
+            
+            Sudoku decoded = decoder.convert(solution);
 
             elapsed = System.nanoTime() - t;
 
-    //        Sudoku decoded = new ExactCoverInstanceToSudokuConverter().convert(instance)
-
-            System.out.println(elapsed);
+            System.out.printf(
+                "%d ns, Valid: %b.%n",
+                elapsed,
+                isValidSolvedSudoku(decoded));
+            
+            System.out.println(decoded.equals(solved));
+            
+            System.out.println("---");
         }
     }
 }
