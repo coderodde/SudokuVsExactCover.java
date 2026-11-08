@@ -4,9 +4,9 @@ import io.github.coderodde.combinatorics.exactcover.AlgorithmXExactCoverSolver;
 import io.github.coderodde.combinatorics.exactcover.ExactCoverInstance;
 import io.github.coderodde.combinatorics.exactcover.ExactCoverSolution;
 import io.github.coderodde.combinatorics.exactcover.ExactCoverSolver;
-import io.github.coderodde.combinatorics.exactcover.converters.ExactCoverSolutionToSudokuConverter;
+import io.github.coderodde.combinatorics.exactcover.converters.SudokuExactCoverDecoder;
 import io.github.coderodde.combinatorics.exactcover.converters.Sudoku;
-import io.github.coderodde.combinatorics.exactcover.converters.SudokuToExactCoverInstanceConverter;
+import io.github.coderodde.combinatorics.exactcover.converters.SudokuExactCoverEncoder;
 import io.github.coderodde.puzzles.sudoku.SudokuSolver;
 import io.github.coderodde.statistics.run.RunStatistics;
 import io.github.coderodde.statistics.run.Runner;
@@ -69,15 +69,15 @@ public final class Benchmark {
             new AlgorithmXExactCoverSolver();
         
         private final ExactCoverInstance instance = 
-            new SudokuToExactCoverInstanceConverter().convert(ARTO_INKALA_SUDOKU);
+            new SudokuExactCoverEncoder().encode(ARTO_INKALA_SUDOKU);
         
-        private final ExactCoverSolutionToSudokuConverter decoder = 
-            new ExactCoverSolutionToSudokuConverter();
+        private final SudokuExactCoverDecoder decoder = 
+            new SudokuExactCoverDecoder();
         
         @Override
         public void run() {
             ExactCoverSolution solution = solver.solve(instance);
-            Sudoku sudoku = decoder.convert(solution);
+            Sudoku sudoku = decoder.decode(solution);
             results.add(sudoku);
         }
     }
@@ -111,6 +111,6 @@ public final class Benchmark {
         System.out.printf(
             "> Algorithms agree: %b.%n", 
             sudokuRunnable.getResults()
-                          .equals(exactCoverRunnable.getResults()));
+                          .equals(exactCoverRunnable.getResults()));    
     }
 }
