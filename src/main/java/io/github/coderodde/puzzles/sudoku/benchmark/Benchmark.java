@@ -4,12 +4,12 @@ import io.github.coderodde.combinatorics.exactcover.AlgorithmXExactCoverSolver;
 import io.github.coderodde.combinatorics.exactcover.ExactCoverInstance;
 import io.github.coderodde.combinatorics.exactcover.ExactCoverSolution;
 import io.github.coderodde.combinatorics.exactcover.ExactCoverSolver;
-import io.github.coderodde.combinatorics.exactcover.converters.SudokuExactCoverDecoder;
 import io.github.coderodde.combinatorics.exactcover.converters.Sudoku;
+import io.github.coderodde.combinatorics.exactcover.converters.SudokuExactCoverDecoder;
 import io.github.coderodde.combinatorics.exactcover.converters.SudokuExactCoverEncoder;
 import io.github.coderodde.puzzles.sudoku.SudokuSolver;
-import io.github.coderodde.statistics.run.RunStatistics;
-import io.github.coderodde.statistics.run.Runner;
+import io.github.coderodde.statistics.run.BenchmarkSummary;
+import io.github.coderodde.statistics.run.BenchmarkRunner;
 import io.github.coderodde.statistics.run.SignificanceLevel;
 
 /**
@@ -19,7 +19,8 @@ import io.github.coderodde.statistics.run.SignificanceLevel;
 public final class Benchmark {
     
     private static final int WARMUP_ITERATIONS = 1_000;
-    private static final int ITERATIONS        = 10_000;
+    private static final int MAJOR_ITERATIONS  = 500;
+    private static final int MINOR_ITERATIONS  = 2_000;
     private static final double SIGNIFICANCE_LEVEL_VALUE = 0.05;
     private static final SignificanceLevel SIGNIFICANCE_LEVEL = 
                      new SignificanceLevel(SIGNIFICANCE_LEVEL_VALUE);
@@ -48,9 +49,7 @@ public final class Benchmark {
         }
 
         @Override
-        public void run() {
-        
-        }
+        public void run() {}
     }
     
     private static final class SudokuRunnable extends AbstractRunnable {
@@ -85,35 +84,46 @@ public final class Benchmark {
     
     public static void main(String[] args) {
         AbstractRunnable sudokuRunnable     = new SudokuRunnable();
-        AbstractRunnable exactCoverRunnable = new ExactCoverRunnable();
+        AbstractRunnable algorithmXRunnable = new ExactCoverRunnable();
+        
+        BenchmarkRunner sudokuBenchmarkRunner = 
+            new BenchmarkRunner(SIGNIFICANCE_LEVEL);
+        
+        BenchmarkRunner algorithmXBenchmarkRunner = 
+            new BenchmarkRunner(SIGNIFICANCE_LEVEL);
         
         // Warmup:
-        Runner.measure(sudokuRunnable, WARMUP_ITERATIONS, SIGNIFICANCE_LEVEL);
-        Runner.measure(sudokuRunnable, WARMUP_ITERATIONS, SIGNIFICANCE_LEVEL);
+        sudokuBenchmarkRunner.measure(sudokuRunnable, WARMUP_ITERATIONS);
+        algorithmXBenchmarkRunner.measure(
+            algorithmXRunnable,
+            WARMUP_ITERATIONS);
         
-        RunStatistics sudokuRunStatistics = 
-            Runner.measure(sudokuRunnable, 
-                           ITERATIONS, 
-                           SIGNIFICANCE_LEVEL);
+        for (int i = 0; i < MAJOR_ITERATIONS; ++i) {
+            sudokuBenchmarkRunner.measure(sudokuRunnable, MINOR_ITERATIONS);
+            
+            algorithmXBenchmarkRunner.measure(algorithmXRunnable, 
+                                              MINOR_ITERATIONS);
+        }
         
-        RunStatistics exactCoverRunStatistics = 
-            Runner.measure(exactCoverRunnable, 
-                           ITERATIONS, 
-                           SIGNIFICANCE_LEVEL);
+        BenchmarkSummary sudokuSummary =
+            sudokuBenchmarkRunner.getBenchmarkSummary();
+        
+        BenchmarkSummary algorithmXSummary = 
+            algorithmXBenchmarkRunner.getBenchmarkSummary();
         
         System.out.println("=== Sudoku solver ===");
-        System.out.println(sudokuRunStatistics);
+        System.out.println(sudokuSummary);
         
         System.out.println();
         
         System.out.println("=== Exact cover solver (Algorithm X) ===");
-        System.out.println(exactCoverRunStatistics);
+        System.out.println(algorithmXSummary);
         
         System.out.println("");
         
         System.out.printf(
             "> Algorithms agree: %b.%n", 
             sudokuRunnable.getResult()
-                          .equals(exactCoverRunnable.getResult()));    
+                          .equals(algorithmXRunnable.getResult()));    
     }
 }
